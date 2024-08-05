@@ -4,18 +4,29 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
 class Program
 {
     static void Main(string[] args)
     {
-        string dir1 = @"path\to\first\directory";
-        string dir2 = @"path\to\second\directory";
+        if (args.Length < 2)
+        {
+            Console.WriteLine("Usage: Program <directory1> <directory2>");
+            return;
+        }
 
-        var dir1Files = Directory.GetFiles(dir1);
-        var dir2Files = Directory.GetFiles(dir2);
+        string dir1 = args[0];
+        string dir2 = args[1];
+
+        if (!Directory.Exists(dir1) || !Directory.Exists(dir2))
+        {
+            Console.WriteLine("Both directories must exist.");
+            return;
+        }
+
+        var dir1Files = Directory.GetFiles(dir1, "*", SearchOption.AllDirectories);
+        var dir2Files = Directory.GetFiles(dir2, "*", SearchOption.AllDirectories);
 
         var dir1Hashes = new ConcurrentDictionary<string, string>();
         var dir2Hashes = new ConcurrentDictionary<string, string>();
@@ -27,9 +38,9 @@ class Program
         );
 
         // Calculate sets
-        var s1 = dir1Hashes.Keys.Except(dir2Hashes.Keys).ToList();
-        var s2 = dir2Hashes.Keys.Except(dir1Hashes.Keys).ToList();
-        var s3 = dir1Hashes.Keys.Intersect(dir2Hashes.Keys).ToList();
+        var s1 = dir1Hashes.Values.Except(dir2Hashes.Values).ToList();
+        var s2 = dir2Hashes.Values.Except(dir1Hashes.Values).ToList();
+        var s3 = dir1Hashes.Values.Intersect(dir2Hashes.Values).ToList();
 
         // Write results to files
         File.WriteAllLines("S1.txt", s1);
